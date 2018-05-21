@@ -1,10 +1,11 @@
 <!--
-Attention Visualizer, modified by Nathan Landman. 
+Attention Visualizer for Infographics, modified by Nathan Landman <nlandmanc@gmail.com>. 
 
 Originally based on code by Andrej Karpathy described here:
   http://karpathy.github.io/2015/05/21/rnn-effectiveness/
 and available here:
   http://cs.stanford.edu/people/karpathy/viscode.zip
+
 Further Modified by Abigail See, here: https://github.com/abisee/attn_vis
 -->
 
@@ -22,6 +23,10 @@ Further Modified by Abigail See, here: https://github.com/abisee/attn_vis
   <script src="external/underscore-min.js"></script>
   <script src="external/sprintf.min.js"></script>
   <link href='http://fonts.googleapis.com/css?family=Cousine' rel='stylesheet' type='text/css'>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
 
   <style>
   #curr_datafile{
@@ -31,9 +36,15 @@ Further Modified by Abigail See, here: https://github.com/abisee/attn_vis
     padding-top: 20px;
   }
 
-  #buttons { 
-      float: right;
+  .jumboheader{
+      height:165px;
+      padding-top:10px;
   }
+
+  #buttons{
+      float:right; 
+  }
+
   .button {
     background-color: #4CAF50; /* Green */
     border: none;
@@ -67,15 +78,106 @@ Further Modified by Abigail See, here: https://github.com/abisee/attn_vis
       background-color: #4CAF50;
       color:white;
   }
+  .uploadbutton{
+      background-color: white;
+      color: gray;
+      border: 2px solid #C0C0C0;
+  }
+  .uploadbutton:hover{
+      background-color: #C0C0C0;
+      color: white;
+  }
+
   #wrap {
     font-family: 'Cousine';
-    position:relative;
+    position:absolute;
     margin: 10px;
     font-size: 15px;
   }
+  .help-tip{
+    position: absolute;
+    top: 18px;
+    right: 18px;
+    text-align: center;
+    background-color: #80dfff;
+    border-radius: 50%;
+    width: 24px;
+    height: 24px;
+    line-height: 26px;
+    cursor: default;
+    }
+
+    .help-tip:before{
+        content:'?';
+        font-weight: bold;
+        color:#fff;
+    }
+
+    .help-tip:hover p{
+        display:block;
+        transform-origin: 100% 0%;
+
+        -webkit-animation: fadeIn 0.3s ease-in-out;
+        animation: fadeIn 0.3s ease-in-out;
+
+    }
+
+    .help-tip p{    /* The tooltip */
+        display: none;
+        text-align: left;
+        background-color: #303436;
+        padding: 20px;
+        width: 450px;
+        position: absolute;
+        border-radius: 3px;
+        box-shadow: 1px 1px 1px rgba(0, 0, 0, 0.2);
+        right: -4px;
+        color: #FFF;
+        font-size: 20px;
+        z-index: 2;
+        line-height: 1.4;
+    }
+
+    .help-tip p:before{ /* The pointer of the tooltip */
+        position: absolute;
+        content: '';
+        width:0;
+        height: 0;
+        border:6px solid transparent;
+        border-bottom-color:#1E2021;
+        right:10px;
+        top:-12px;
+    }
+
+    .help-tip p:after{ /* Prevents the tooltip from being hidden */
+        width:100%;
+        height:20px;
+        content:'';
+        position: absolute;
+        top:-40px;
+        left:0;
+    }
+
+    /* CSS animation */
+
+    @-webkit-keyframes fadeIn {
+        0% {
+            opacity:0;
+            transform: scale(0.6);
+        }
+
+        100% {
+            opacity:100%;
+            transform: scale(1);
+        }
+    }
+
+    @keyframes fadeIn {
+        0% { opacity:0; }
+        100% { opacity:100%; }
+    }
   </style>
   <script>
-
 
   greenhue = 151
   yellowhue = 56
@@ -145,9 +247,17 @@ Further Modified by Abigail See, here: https://github.com/abisee/attn_vis
     var startix = 0;
     var endix = data.decoded_lst.length;
 
+    var startSent = true;
+
     div.html(''); // flush
     for(var i=startix; i<endix; i++) {
       var word = data.decoded_lst[i]; // a string
+      //Break sentence by '.'.
+      if (startSent){
+          word = word[0].toUpperCase()+word.substr(1);
+          startSent = false;
+      }
+      
       css = 'display:inline;'
       if (data.hasOwnProperty('p_gens')) {
         var p_gen = data.p_gens[i];
@@ -165,6 +275,14 @@ Further Modified by Abigail See, here: https://github.com/abisee/attn_vis
         .on('mouseover', getHandleMouseOver(i, word, p_gen))
         .on('mousemove', handleMouseMove)
         .on('mouseout', handleMouseOut)
+
+      // Separate new line if new sentence.
+      if (['.', '!', '?'].includes(word)){
+          startSent = true;
+          var dnew = div.append('div');
+          dnew.html("<br>");
+      }
+
     }
   }
 
@@ -207,17 +325,31 @@ Further Modified by Abigail See, here: https://github.com/abisee/attn_vis
     dnew.html(data.abstract_str);
   }
 
+  var orimg_w;
+  var orimg_h;
+
   function render_img(div, data){
       div.html('');
       var img = document.createElement('img');
-      img.src = 'images/fullsize-60k/'+data.url;
+      img.src = 'images/local/'+data.url;
+     
+      img.onload = function(){
+        orimg_w = img.naturalWidth;
+        orimg_h = img.naturalHeight;
+        //img.style.maxWidth = orimg_w;
+        //img.style.maxHeigh = orimg_h;
+        //img.style.maxWidth = orimg_w;
+      }
+
       img.style.position='relative';
+      img.style.width='98%';
+      img.style.height='50%';
 
       document.getElementById('img').appendChild(img);
       document.getElementById('img').style.position = 'relative';
   }
 
-  function highlight_word(attn_wt, hue) {
+  function highlight_word_in_image(attn_wt, hue) {
     // converts a scalar value p in [0,1] to a HSL color code string with base color hue
     if (attn_wt<0 || attn_wt>1) {
       throw sprintf("Error: p has value %.2f but should be in [0,1]", p)
@@ -232,12 +364,28 @@ Further Modified by Abigail See, here: https://github.com/abisee/attn_vis
   function highlight_img(div, data, word_idx, attn_wt){
       var img_hlt= document.createElement('div');
       img_hlt.className = 'img_hlt';
-      img_hlt.style.background = highlight_word(attn_wt, yellowhue);
+      img_hlt.style.background = highlight_word_in_image(attn_wt, yellowhue);
       
       img_hlt.style.position = 'absolute';
-
       // t = top, r = right, l = left, b = bottom
       var [tl_x, tl_y, tr_x, tr_y, br_x, br_y, bl_x, bl_y] = data.positions.slice(8*word_idx, 8*(word_idx+1));
+      
+      // resize given new image dimensions
+      var img = document.getElementById('img')
+      //console.log("This",img.clientWidth, img.naturalWidth)
+
+      var prop_w = img.clientWidth / orimg_w
+      var prop_h = img.clientHeight / orimg_h
+
+      tl_x = tl_x * prop_w
+      tr_x = tr_x * prop_w
+      bl_x = bl_x * prop_w
+      br_x = br_x * prop_h
+
+      tl_y = tl_y * prop_h
+      tr_y = tr_y * prop_h
+      bl_y = bl_y * prop_h
+      br_y = br_y * prop_h
 
       img_hlt.style.width = (tr_x - tl_x)+'px';
       img_hlt.style.height = (br_y - tr_y)+'px';
@@ -265,7 +413,7 @@ Further Modified by Abigail See, here: https://github.com/abisee/attn_vis
     function json_fail(d) {
       // Tell the user it failed to load
       console.log("failure.")
-      d3.select("#curr_datafile").html('<font color="red">Failed to load ' + json_fname + "</font>")
+      d3.select("#curr_datafile").html('<font color="red">Failed to load ' + json_fname + "<\/font>")
     }
 
     $.getJSON(json_fname, json_success).fail(json_fail);
@@ -285,6 +433,10 @@ Further Modified by Abigail See, here: https://github.com/abisee/attn_vis
       console.log(num_files)
       json_fname = 'just_glove/'+urls[filecounter]
       get_json_and_disp();
+  }
+
+  function upload(){
+      
   }
 
   function start() {
@@ -311,36 +463,62 @@ Further Modified by Abigail See, here: https://github.com/abisee/attn_vis
         .text("a simple tooltip");
     gtooltip = tooltip // global
   }
+</script>
+</head>
+<body onload="start();">
+     <div class="jumbotron jumboheader text-center container-fluid">
+         <h1>InfoCaption Generator</h1>
+         <p>An Attention Visualizer Tool</p> 
+         <div class="help-tip">
+             <p>This interface helps you visualize the attention used to generate each word in the summary text. Hover over the words in the <i>Generated Summary </i>section to see it in action! <br><br>The <font color="#90EE90"> greener </font> the highlight in a word of the generated summary, the higher the likelihood that it was abstractly generated. Less green implies the word was picked from the summary. <br><br> <font color="yellow">Yellow</font> highlights show how much attention was given to the specific word. Bolder highlights imply greater attention.<br>
+         </div>
 
-  </script>
-    </head>
-    <body onload="start();">
-      <div id="wrap">
-         <div id='buttons'>
-          <button class="button prevbutton" onclick='loadPrev()'>Previous</button>
-          <button class="button nextbutton" onclick="loadNext()">Show me another!</button>
-        </div>
-        <div id="curr_datafile">
-          Current datafile name goes here.  
-        </div>
+     </div>
+     <div class='container' id="wrap">
+         <div class="row">
+             <div id='buttons'>
+                 <button class="button prevbutton" onclick='loadPrev()'>Previous</button>
+                 <button class="button nextbutton" onclick="loadNext()">Next</button>
+                 <button class="button uploadbutton" disabled style='cursor:not-allowed' onclick="upload()">Upload</button>
+             </div>
 
-      <h2>Infographic Title</h2>
-      <div id="abs">
-        reference summary goes here
-      </div>
+             <div>
+                 <div id="curr_datafile" style='height:80px'>
+                     Current datafile name goes here.  
+                 </div>
+             </div>
+             <div class="col-sm-4">
 
-      <h2>Extracted Text</h2>
-      <div id="art">
-        article goes here
-      </div>
-            <h2>Generated summary (highlighted = high generation probability)</h2>
-      <div id="dec">
-        generated summary goes here
-      </div>
-      <h2>Source</h2>
-      <div id="img">
-        generated image goes here
-      </div>
-    </div>
-  </body>
+                 <h2 align=center>Infographic Title</h2>
+                 <div id="abs">
+                     reference summary goes here
+                 </div>
+
+                 <h2 align=center >Generated Summary</h2>
+                 <div id="dec">
+                     generated summary goes here
+                 </div>
+                 <h2 align=center>Extracted Text</h2>
+                 <div id="art" >
+                     article goes here
+                 </div>
+             </div>
+             <div class="col-md-8">
+                 <h2>Source</h2>
+                 <div id="img">
+                     generated image goes here
+                 </div>  <!-- image-->
+             </div> <!-- column-->
+         </div> <!-- row-->
+         <div class='ui divider'></div>
+         <div class='row'>
+             <div id='credits' class='center aligned fourteen wide column'>
+                 <p>
+                 MIT CSAIL, 2018. <br>Cambridge, Massachusetts.<br>
+                 Based on code by Andrej Karpathy, modified by Abigail See.
+                 </p>
+             </div>
+         </div>
+     </div> <!-- container-->
+ </body> <!-- body-->
 </html>
