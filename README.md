@@ -1,6 +1,6 @@
 # Attention Visualizer
 
-This is a tool to visualize the distribution of attention in a text-based sequence-to-sequence task such as summarization. As you hover your mouse over the decoded words, the tool shows a heatmap of attention over the source words. A demo can be seen [here](http://www.abigailsee.com/2017/04/16/taming-rnns-for-better-summarization.html) (scroll down to "Example Output" section).
+This is a tool to visualize the distribution of attention in a text-based sequence-to-sequence task such as summarization. As you hover your mouse over the decoded words, the tool shows a heatmap of attention over the source words. A demo of the original source code, from [See et al.](https://github.com/abisee/attn_vis) can be found [here](http://www.abigailsee.com/2017/04/16/taming-rnns-for-better-summarization.html) (scroll down to "Example Output" section).
 
 Additionally, for pointer-generator networks such as that described in [this paper](https://arxiv.org/abs/1704.04368), the tool displays the _generation probability_ of each decoded word. This tool was designed to work with the [Tensorflow code](https://github.com/abisee/pointer-generator) for the paper.
 
@@ -8,7 +8,7 @@ Additionally, for pointer-generator networks such as that described in [this pap
 
 To run the visualizer, run
 ```
-python -m SimpleHTTPServer
+python -m http.server
 ```
 from this directory then navigate to `http://localhost:8000/` in browser. The visualizer will show some example data.
 
