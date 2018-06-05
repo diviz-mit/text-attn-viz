@@ -428,7 +428,7 @@ Further Modified by Abigail See, here: https://github.com/abisee/attn_vis
   function loadNext(){
       filecounter += 1;
       if (filecounter == num_files) {filecounter = 0}
-      json_fname = 'just_glove/'+urls[filecounter]
+      json_fname = 'examples/'+urls[filecounter]
       get_json_and_disp();
   }
   
@@ -436,7 +436,7 @@ Further Modified by Abigail See, here: https://github.com/abisee/attn_vis
       filecounter -= 1;
       if (filecounter < 0) {filecounter = num_files-1}
       console.log(num_files)
-      json_fname = 'just_glove/'+urls[filecounter]
+      json_fname = 'exmples/'+urls[filecounter]
       get_json_and_disp();
   }
 
