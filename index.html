@@ -52,6 +52,7 @@ Further Modified by Abigail See, here: https://github.com/abisee/attn_vis
     padding: 16px 32px;
     text-align: center;
     text-decoration: none;
+    outline:none;
     display: inline-block;
     font-size: 16px;
     margin: 4px 2px;
@@ -236,7 +237,9 @@ Further Modified by Abigail See, here: https://github.com/abisee/attn_vis
         .html(word_html)
 
       // highlight image 
-      highlight_img(d3.select('#img'), gdata, i, attn_wt);
+      if (gdata.hasOwnProperty('positions')){
+         highlight_img(d3.select('#img'), gdata, i, attn_wt);
+      }
 
     }
   }
@@ -328,23 +331,27 @@ Further Modified by Abigail See, here: https://github.com/abisee/attn_vis
   var orimg_w;
   var orimg_h;
 
-  function render_img(div, data){
+
+  function render_img(div, url){
       div.html('');
       var img = document.createElement('img');
-      img.src = 'images/local/'+data.url;
-     
+      img.src = url;
+
+      document.getElementById('img').style.maxHeight='900px'; <!--  900 is the size of the window. -->
+
       img.onload = function(){
         orimg_w = img.naturalWidth;
         orimg_h = img.naturalHeight;
         //img.style.maxWidth = orimg_w;
         //img.style.maxHeigh = orimg_h;
         //img.style.maxWidth = orimg_w;
+          var height = $(img).height();
+          document.getElementById('img').style.height = 'height';
       }
 
-      document.getElementById('img').style.height='900px'; <!--  900 is the size of the window. -->
 
       img.style.maxWidth='100%';
-      img.style.maxHeight='100%';
+      img.style.maxHeight='900px';
       img.style.height='auto';
       img.style.width='auto';
       
@@ -352,6 +359,16 @@ Further Modified by Abigail See, here: https://github.com/abisee/attn_vis
      
       document.getElementById('img').appendChild(img);
       document.getElementById('img').style.position='relative';
+  }
+
+  function render_img_local(div, data){
+      var url = 'images/local/'+data.url;
+      render_img(div, url);
+  }
+
+
+  function render_no_img(div){
+      div.html('No Image File Selected During Upload.');
   }
 
   function highlight_word_in_image(attn_wt, hue) {
@@ -407,12 +424,12 @@ Further Modified by Abigail See, here: https://github.com/abisee/attn_vis
     function json_success(data) {
       // Displays the data
       console.log("success!")
-      d3.select("#curr_datafile").html('Currently displaying: '+ data.url)
+      d3.select("#curr_datafile").html('Currently displaying: '+ data.url.slice(0,-4))
       gdata = data; // store globally
       render_art(d3.select("#art"), gdata, null, null);
       render_abs(d3.select("#abs"), gdata);
       render_dec(d3.select("#dec"), gdata);
-      render_img(d3.select("#img"), gdata);
+      render_img_local(d3.select("#img"), gdata);
     }
 
     function json_fail(d) {
@@ -428,7 +445,7 @@ Further Modified by Abigail See, here: https://github.com/abisee/attn_vis
   function loadNext(){
       filecounter += 1;
       if (filecounter == num_files) {filecounter = 0}
-      json_fname = 'examples/'+urls[filecounter]
+      json_fname = 'example_jsons/'+urls[filecounter]
       get_json_and_disp();
   }
   
@@ -436,21 +453,74 @@ Further Modified by Abigail See, here: https://github.com/abisee/attn_vis
       filecounter -= 1;
       if (filecounter < 0) {filecounter = num_files-1}
       console.log(num_files)
-      json_fname = 'exmples/'+urls[filecounter]
+      json_fname = 'example_jsons/'+urls[filecounter]
       get_json_and_disp();
   }
 
-  function upload(){
-      
+  function upload () {
+      uploadjson();
+      uploadimg();
+      clearinput();
+        };
+
+  function clearinput(){
+      document.getElementById('uploadjson').value='';
+      document.getElementById('uploadinfographic').value='';
   }
+
+  function uploadjson(){
+      var input = document.getElementById('uploadjson')
+      var files = input.files;
+      if (files.length <= 0) {
+        return false;
+      }
+
+      var fr = new FileReader();
+
+      fr.onload = function(e) {
+        var result = JSON.parse(e.target.result);
+        if (results.url.slice(-5) != '.json'){
+            console.log("File does not end in 'json'");
+            false
+        }
+        console.log(result.url.slice(-4));
+        gdata = result;
+        json_fname = result.url;  
+        d3.select("#curr_datafile").html('Currently Displaying: '+ json_fname.slice(0,-4))
+        render_art(d3.select("#art"),gdata , null, null);
+        render_abs(d3.select("#abs"),gdata);
+        render_dec(d3.select("#dec"),gdata);
+      }
+
+      fr.readAsText(files.item(0));
+  }
+
+  function uploadimg(){
+      var input = document.getElementById('uploadinfographic')
+      var files = input.files;
+      if (files.length <=0) {
+          render_no_img(d3.select('#img'))
+          console.log("No image file selected. Rendering text only.")
+          return false
+      }
+      var fr = new FileReader();
+
+      fr.onload = function(e) {
+          var src = fr.result;
+          console.log(src.type);
+          render_img(d3.select('#img'), src);
+      }
+      fr.readAsDataURL(files.item(0));
+  }
+
 
   function start() {
     //json_fname = "attn_vis_data.json" // file containing the text and the weights
-    $.get('just_glove_urls.txt', function(data){
+    $.get('json_file_urls.txt', function(data){
         urls = data.split('\n').slice(0,-1);
         num_files = urls.length;
         console.log(num_files)
-        json_fname = 'just_glove/'+urls[filecounter]
+        json_fname = 'example_jsons/'+urls[filecounter]
         get_json_and_disp()
     });
     
@@ -484,7 +554,54 @@ Further Modified by Abigail See, here: https://github.com/abisee/attn_vis
              <div id='buttons'>
                  <button class="button prevbutton" onclick='loadPrev()'>Previous</button>
                  <button class="button nextbutton" onclick="loadNext()">Next</button>
-                 <button class="button uploadbutton" disabled style='cursor:not-allowed' onclick="upload()">Upload</button>
+                 <button type="button" class="button uploadbutton" data-toggle="modal" data-target="#uploadModal">Upload</button>
+
+                  <!-- Modal -->
+                  <div class="modal fade" id="uploadModal" role="dialog">
+                    <div class="modal-dialog">
+                    
+                      <!-- Modal content-->
+                      <div class="modal-content">
+                        <div class="modal-header">
+                          <button type="button" class="close" data-dismiss="modal">&times;</button>
+                          <h3 class="modal-title" style='text-align:center'>Upload Your Infographic!</h3>
+                        </div>
+                        <form action='#'>
+                        <div class="modal-body">
+                          <div class="form-inline">
+                            <h4 style='color:green'>Select the Infographic JSON File</h4>
+                            <input style='padding-bottom:10px' type="file" class="form-control-file" id="uploadjson" aria-describedby="uploadjsontext" value='Import'>
+                            <small style='color:dark-gray' id="uploadjsontext" class="form-text">The JSON file must have the attributes described below. </small>
+                                <ul style='font-size:12px;color:dark-gray'>
+                                    <li><span style="background-color: #FFFFC6">article_lst</span>: The article (or source text) as a list of words.</li>
+                                    <li><span style="background-color: #FFFFC6">decoded_lst</span>: The decoded (machine-generated) summary as a list of words.</li>
+                                    <li><span style="background-color: #FFFFC6">abstract_str</span>: the reference summary as a single string.</li>
+                                    <li><span style="background-color: #FFFFC6">attn_dists</span>: a list having the same length as the decoded_lst. It contains lists of length "attention length," with probabilities of attention for each word in the article.  Note: an article may have 500 words, but if one feeds only the first 200 words into the model, the attention will be of length 200. In this case, the visualizer marks the truncation point in the article.</li>
+                                    <li><span style="background-color: #FFFFC6">p_gens</span>: A list containing generation probabilities for each word in the decoded_lst.</li>
+                                    <li><span style="background-color: #FFFFC6">url</span>: the url, or file name, of the infographic being decoded.</li>
+                                    <li><span style="background-color: #FFFFC6">positions</span> (optional): A list of bounding boxes for each specific word in decoded_lst. The list contains 8 values per word for a total of 8 x decoded_lst values. The 8 values correspond to the coordinates of each corner in the bounding box going clock-wise from top-left of the image. It is ordered as <b>top_left_x, top_left_y, top_right_x, top_right_y, bottom_right_x, bottom_right_y, bottom_left_x, bottom_left_y</b>, where <b>x</b> is the horizontal and <b>y</b> is the vertical distance from the top left corner of the infographic.
+                                    </ul>
+                                    <small style='color:gray;font-'> WARNING: Make sure that none of the strings in article_lst, decoded_lst, or abstract_str contain "<" or ">". These will interfere with the HTML and can result in text not being displayed. Also, make sure your selected file ends in '.json'.</small>
+                            <br><br>
+                            <hr />
+                            <h4 style='color:green'>Select the Infographic Image (Optional)</h4>
+
+                            <input style='padding-bottom:10px' type="file" class="form-control-file" id="uploadinfographic" aria-describedby="uploadinfographictext">
+                            <small id="uploadinfographictext" class="form-text">Only extensions tested are '.jpg' or '.png'.  You can still load the JSON file of a summary without uploading the respective infographic image, so this field is optional.</small>
+
+                          </div>
+                        </div>
+
+                        <div class="modal-footer">
+                          <button type="submit" class="btn btn-primary" data-dismiss='modal' onclick='upload()' style='outline:none'>Submit</button>
+                          <button type="button" class="btn btn-default" data-dismiss="modal" onclick='clearinput()' style='outline:none'>Close</button>
+                        </div>
+                        </form>
+                      </div>
+                      
+                    </div>
+                  </div>
+                  <!-- End of modal content -->
              </div>
 
              <div class='col-md-6 text-center'>
