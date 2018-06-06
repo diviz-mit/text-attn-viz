@@ -14,7 +14,7 @@ from this directory and open `http://localhost:8000/,` or the port used to initi
 
 ## To use your own data
 
-To visualize your own data, you need to replace `attn_vis_data.json` with a similar file, either produced by this [Tensorflow code](https://github.com/abisee/pointer-generator), or by your own model. In particular `attn_vis_data.json` should contain the following fields:
+To visualize your own data, you can add your images to the 'example\_images' folder, along with the proper JSON file in the 'example\_jsons,' or you can also use the <b>Upload</b> button provided in the interface. The JSON file, either produced by this [Tensorflow code](https://github.com/abisee/pointer-generator), or [our modified model](https://github.com/diviz-mit/pointer_gen). Each JSON file should contain the following fields:
 
 
 * `article_lst`: the article (or source text) as a list of words.
