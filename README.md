@@ -14,7 +14,7 @@ from this directory and open `http://localhost:8000/,` or the port used to initi
 
 ## To use your own data
 
-To visualize your own data, you can add your images to the 'example\_images' folder, along with the proper JSON file in the 'example\_jsons,' or you can also use the <b>Upload</b> button provided in the interface. The JSON file, either produced by this [Tensorflow code](https://github.com/abisee/pointer-generator), or [our modified model](https://github.com/diviz-mit/pointer_gen). Each JSON file should contain the following fields:
+Add your images to the [images](https://github.com/diviz-mit/text-attn-viz/tree/master/images) folder, along with the proper JSON file in the [jsons](https://github.com/diviz-mit/text-attn-viz/tree/master/jsons). The JSON file can be produced by this [Tensorflow code](https://github.com/abisee/pointer-generator), or by [our modified model](https://github.com/diviz-mit/pointer_gen). Each JSON file should contain the following fields:
 
 
 * `article_lst`: the article (or source text) as a list of words.
@@ -26,3 +26,5 @@ To visualize your own data, you can add your images to the 'example\_images' fol
 * `positions`: A list of bounding boxes for each specific word in `decoded_lst`.  The list contains 8 values per word, for a total of 8 x `decoded_lst` values.  The 8 values correspond to the coordinates of each corner in the bounding box going clock-wise from the top-left of the image.  It is ordered as <b>top_left_x, top_left_y, top_right_x, top_right_y, bottom_right_x, bottom_right_y, bottom_left_x, bottom_left_y</b>, where <b>x</b> is the horizontal and <b>y</b> is the vertical distance from the top left corner of the infographic.
 
 WARNING: Make sure that none of the strings in `article_lst`, `decoded_lst`, or `abstract_str` contain `<angled brackets>`. These will interfere with the HTML and can result in text not being displayed.
+
+
